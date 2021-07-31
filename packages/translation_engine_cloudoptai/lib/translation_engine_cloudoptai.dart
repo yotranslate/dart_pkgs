@@ -9,6 +9,7 @@ const String kEngineTypeCloudoptAI = 'cloudoptai';
 
 class CloudoptAITranslationEngine extends TranslationEngine {
   String get type => kEngineTypeCloudoptAI;
+  List<String> get supportedScopes => [kScopeLookUp];
 
   CloudoptAITranslationEngine(TranslationEngineConfig config) : super(config);
 
@@ -16,12 +17,18 @@ class CloudoptAITranslationEngine extends TranslationEngine {
   Future<LookUpResponse> lookUp(LookUpRequest request) async {
     LookUpResponse lookUpResponse = LookUpResponse(engine: name);
 
-    var response = await http.get(
-        'https://ai.cloudopt.net/api/v1/dict/${Uri.encodeQueryComponent(request.word)}');
+    Uri uri = Uri.https(
+      'ai.cloudopt.net',
+      '/api/v1/dict/${Uri.encodeQueryComponent(request.word)}',
+    );
+
+    var response = await http.get(uri);
     Map<String, dynamic> data = json.decode(response.body);
     if (data['error'] != null) {
       throw NotFoundException(message: data['errorMessage']);
     }
+    print(uri.toString());
+    print(response.body);
 
     Map<String, dynamic> result = data['result'];
 
@@ -94,6 +101,29 @@ class CloudoptAITranslationEngine extends TranslationEngine {
 
         if (lookUpResponse.tenses.length == 0) {
           lookUpResponse.tenses = null;
+        }
+      }
+
+      if (result['detail'] != null) {
+        // 短语
+        dynamic wordGroupList = result['detail']['word_group'];
+        if (wordGroupList != null) {
+          lookUpResponse.phrases = (wordGroupList as List).map((e) {
+            return WordPhrase(
+              text: e['en'],
+              translations: [e['cn']],
+            );
+          }).toList();
+        }
+        // 例句
+        dynamic exampleSentenceList = result['detail']['example_sentences'];
+        if (exampleSentenceList != null) {
+          lookUpResponse.sentences = (exampleSentenceList as List).map((e) {
+            return WordSentence(
+              text: e['en'],
+              translations: [e['cn']],
+            );
+          }).toList();
         }
       }
     }
