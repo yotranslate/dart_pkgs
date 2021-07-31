@@ -5,6 +5,9 @@ class TranslateRequest {
   final Language targetLanguage;
   final String text;
 
+  String get sourceLanguageCode => sourceLanguage?.code;
+  String get targetLanguageCode => targetLanguage?.code;
+
   TranslateRequest({
     this.sourceLanguage,
     this.targetLanguage,

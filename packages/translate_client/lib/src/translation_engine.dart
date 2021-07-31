@@ -3,11 +3,17 @@ import 'models/look_up_response.dart';
 import 'models/translate_request.dart';
 import 'models/translate_response.dart';
 
+const kScopeDetect = 'detect';
+const kScopeLookUp = 'lookUp';
+const kScopeTranslate = 'translate';
+
 class TranslationEngineConfig {
   final String identifier;
   String type;
   String name;
   Map<String, dynamic> option;
+  List<String> disabledScopes = [];
+  bool disabled = false;
 
   String get shortId => identifier.substring(0, 4);
 
@@ -16,6 +22,8 @@ class TranslationEngineConfig {
     this.type,
     this.name,
     this.option,
+    this.disabledScopes,
+    this.disabled = false,
   });
 
   factory TranslationEngineConfig.fromJson(Map<String, dynamic> json) {
@@ -28,6 +36,10 @@ class TranslationEngineConfig {
       option: json['option'] != null
           ? Map<String, dynamic>.from(json['option'])
           : null,
+      disabledScopes: json['disabledScopes'] != null
+          ? List<String>.from(json['disabledScopes'])
+          : null,
+      disabled: json['disabled'] ?? false,
     );
   }
 
@@ -36,6 +48,8 @@ class TranslationEngineConfig {
       'identifier': identifier,
       'type': type,
       'option': option,
+      'disabledScopes': disabledScopes,
+      'disabled': disabled ?? false,
     };
   }
 }
@@ -43,10 +57,14 @@ class TranslationEngineConfig {
 abstract class TranslationEngine {
   TranslationEngineConfig config;
 
-  String get type => config.type;
   String get identifier => config.identifier;
+  String get type => config.type;
   String get name => config.name;
   Map<String, dynamic> get option => config.option;
+  List<String> get supportedScopes =>
+      [kScopeDetect, kScopeLookUp, kScopeTranslate];
+  List<String> get disabledScopes => config.disabledScopes;
+  bool get disabled => config.disabled ?? false;
 
   TranslationEngine(this.config);
 
@@ -59,6 +77,9 @@ abstract class TranslationEngine {
       'identifier': config.identifier,
       'type': type,
       'name': config.name,
+      'supportedScopes': supportedScopes,
+      'disabledScopes': disabledScopes,
+      'disabled': disabled,
     };
   }
 }

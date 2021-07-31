@@ -11,10 +11,19 @@ class Language {
   static final Language RU = Language('ru', 'Russian');
   static final Language ZH = Language('zh', 'Chinese');
 
-  String code;
-  String name;
+  final String code;
+  final String name;
+  String nativeName;
+  bool supportedAsSource;
+  bool supportedAsTarget;
 
-  Language(this.code, this.name);
+  Language(
+    this.code,
+    this.name, {
+    this.nativeName,
+    this.supportedAsSource,
+    this.supportedAsTarget,
+  });
 
   factory Language.fromJson(Map<String, dynamic> json) {
     if (json == null) return null;
@@ -22,6 +31,9 @@ class Language {
     return Language(
       json['code'],
       json['name'],
+      nativeName: json['nativeName'],
+      supportedAsSource: json['supportedAsSource'],
+      supportedAsTarget: json['supportedAsTarget'],
     );
   }
 
@@ -29,6 +41,9 @@ class Language {
     return {
       'code': code,
       'name': name,
+      'nativeName': nativeName,
+      'supportedAsSource': supportedAsSource,
+      'supportedAsTarget': supportedAsTarget,
     };
   }
 }
