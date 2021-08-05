@@ -17,6 +17,7 @@ class IcibaTranslationEngine extends TranslationEngine {
   IcibaTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeIciba;
+  List<String> get supportedScopes => [kScopeLookUp];
 
   String get _optionApiKey => option[_kEngineOptionKeyApiKey];
 
@@ -36,7 +37,7 @@ class IcibaTranslationEngine extends TranslationEngine {
 
     print(uri.toString());
 
-    var response = await http.get(uri.toString());
+    var response = await http.get(uri);
     Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
     print(response.body);
 
@@ -107,6 +108,11 @@ class IcibaTranslationEngine extends TranslationEngine {
       if (lookUpResponse.tenses.length == 0) {
         lookUpResponse.tenses = null;
       }
+    }
+
+    if ((lookUpResponse.pronunciations ?? []).isEmpty &&
+        (lookUpResponse.definitions ?? []).isEmpty) {
+      throw TranslateClientError(message: 'Resource not found.');
     }
 
     return lookUpResponse;

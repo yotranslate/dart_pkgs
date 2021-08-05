@@ -25,6 +25,7 @@ class BaiduTranslationEngine extends TranslationEngine {
   BaiduTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeBaidu;
+  List<String> get supportedScopes => [kScopeTranslate];
 
   String get _optionAppId => option[_kEngineOptionKeyAppId];
   String get _optionAppKey => option[_kEngineOptionKeyAppKey];
@@ -46,8 +47,8 @@ class BaiduTranslationEngine extends TranslationEngine {
       '/api/trans/vip/translate',
       {
         'q': request.text,
-        'from': 'auto',
-        'to': 'zh',
+        'from': request.sourceLanguageCode ?? 'auto',
+        'to': request.targetLanguageCode,
         'appid': _optionAppId,
         'salt': salt.toString(),
         'sign': sign.toString(),
@@ -63,6 +64,13 @@ class BaiduTranslationEngine extends TranslationEngine {
     });
     Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
     print(response.body);
+
+    if (data['error_code'] != null) {
+      throw TranslateClientError(
+        code: data['error_code'],
+        message: data['error_msg'],
+      );
+    }
 
     translateResponse.translations = (data['trans_result'] as List).map((e) {
       return Translation(

@@ -28,6 +28,7 @@ class TencentTranslationEngine extends TranslationEngine {
   TencentTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeTencent;
+  List<String> get supportedScopes => [kScopeTranslate];
 
   String get _optionSecretId => option[_kEngineOptionKeySecretId];
   String get _optionSecretKey => option[_kEngineOptionKeySecretKey];
@@ -41,23 +42,23 @@ class TencentTranslationEngine extends TranslationEngine {
   Future<TranslateResponse> translate(TranslateRequest request) async {
     TranslateResponse translateResponse = TranslateResponse();
 
-    Map<String, String> queryParameters = {
+    Map<String, String> body = {
       'Action': 'TextTranslate',
       'Language': 'zh-CN',
       'Nonce': '${Random().nextInt(9999)}',
       'ProjectId': '0',
       'Region': 'ap-guangzhou',
       'SecretId': _optionSecretId,
-      'Source': 'auto',
+      'Source': request.sourceLanguageCode ?? 'auto',
       'SourceText': request.text,
-      'Target': 'zh',
+      'Target': request.targetLanguageCode,
       'Timestamp': '${DateTime.now().millisecondsSinceEpoch ~/ 1000}',
       'Version': '2018-03-21',
     };
 
-    List<String> keys = queryParameters.keys.toList();
+    List<String> keys = body.keys.toList();
     keys.sort((a, b) => a.compareTo(b));
-    String query = keys.map((key) => '$key=${queryParameters[key]}').join('&');
+    String query = keys.map((key) => '$key=${body[key]}').join('&');
     print(query);
 
     String endpoint = 'tmt.tencentcloudapi.com';
@@ -66,20 +67,22 @@ class TencentTranslationEngine extends TranslationEngine {
     String signature = _signature(_optionSecretKey, srcStr);
     print(signature);
 
-    queryParameters.putIfAbsent('Signature', () => signature);
+    body.putIfAbsent('Signature', () => signature);
 
-    keys = queryParameters.keys.toList();
+    keys = body.keys.toList();
     keys.sort((a, b) => a.compareTo(b));
-    query = keys.map((key) => '$key=${queryParameters[key]}').join('&');
+    query = keys.map((key) => '$key=${body[key]}').join('&');
 
     print('$endpoint/?$query');
 
-    var response = await http.post('https://$endpoint',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json',
-        },
-        body: queryParameters);
+    var response = await http.post(
+      Uri.parse('https://$endpoint'),
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+      },
+      body: body,
+    );
     print(response);
     Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
     print(json.encode(data));

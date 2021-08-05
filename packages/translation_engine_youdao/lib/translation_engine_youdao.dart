@@ -28,6 +28,7 @@ class YoudaoTranslationEngine extends TranslationEngine {
   YoudaoTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeYoudao;
+  List<String> get supportedScopes => [kScopeLookUp];
 
   String get _optionAppKey => option[_kEngineOptionKeyAppKey];
   String get _optionAppSecret => option[_kEngineOptionKeyAppSecret];
@@ -53,8 +54,8 @@ class YoudaoTranslationEngine extends TranslationEngine {
       '/api',
       {
         'q': request.word,
-        'from': 'auto',
-        'to': 'auto',
+        'from': request.sourceLanguageCode ?? 'auto',
+        'to': request.targetLanguageCode,
         'appKey': _optionAppKey,
         'salt': salt.toString(),
         'sign': sign.toString(),
@@ -74,15 +75,29 @@ class YoudaoTranslationEngine extends TranslationEngine {
     var basic = data['basic'];
     var returnPhrase = data['returnPhrase'];
     var tSpeakUrl = data['tSpeakUrl'];
-    var speakUrl = data['speakUrl'];
+
+    if (translation != null) {
+      lookUpResponse.translations =
+          (translation as List).map((e) => Translation(text: e)).toList();
+      if (lookUpResponse.translations.length == 1) {
+        lookUpResponse.translations[0].audioUrl = tSpeakUrl;
+      }
+    }
 
     if (returnPhrase != null) {
       lookUpResponse.word = returnPhrase[0];
     }
 
     if (basic != null) {
+      var examType = basic['exam_type'];
       var explains = basic['explains'];
       var wfs = basic['wfs'];
+
+      if (examType != null) {
+        lookUpResponse.tags = (examType as List).map((e) {
+          return WordTag(name: e);
+        }).toList();
+      }
       if (explains != null) {
         lookUpResponse.definitions = (explains as List).map((e) {
           String def = e.toString();
@@ -129,6 +144,32 @@ class YoudaoTranslationEngine extends TranslationEngine {
             values: values,
           );
         }).toList();
+      }
+    }
+
+    if ((lookUpResponse.definitions ?? []).isNotEmpty ||
+        (lookUpResponse.pronunciations ?? []).isNotEmpty) {
+      Uri uri2 = Uri.https(
+        'picdict.youdao.com',
+        '/search',
+        {
+          'q': request.word,
+          'le': request.sourceLanguageCode,
+        },
+      );
+
+      try {
+        var response2 = await http.get(uri2);
+        Map<String, dynamic> data2 = json.decode(response2.body);
+        print(data2);
+
+        if (data2['data']['pic'] != null) {
+          lookUpResponse.images = (data2['data']['pic'] as List)
+              .map((e) => WordImage(url: e['url']))
+              .toList();
+        }
+      } catch (error) {
+        // skip
       }
     }
 

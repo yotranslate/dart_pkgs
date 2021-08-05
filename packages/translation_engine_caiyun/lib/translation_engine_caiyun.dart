@@ -19,6 +19,7 @@ class CaiyunTranslationEngine extends TranslationEngine {
   CaiyunTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeCaiyun;
+  List<String> get supportedScopes => [kScopeTranslate];
 
   String get _optionToken => option[_kEngineOptionKeyToken];
   String get _optionRequestId => option[_kEngineOptionKeyRequestId];
@@ -34,8 +35,7 @@ class CaiyunTranslationEngine extends TranslationEngine {
 
     String transType = 'auto';
     if (request.sourceLanguage != null && request.targetLanguage != null) {
-      transType =
-          '${request.sourceLanguage.code}2${request.targetLanguage.code}';
+      transType = '${request.sourceLanguageCode}2${request.targetLanguageCode}';
     }
 
     final payload = {
@@ -53,6 +53,10 @@ class CaiyunTranslationEngine extends TranslationEngine {
     );
     Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
     print(response.body);
+
+    if (data['message'] != null) {
+      throw TranslateClientError(message: data['message']);
+    }
 
     translateResponse.translations = (data['target'] as List).map(
       (e) {

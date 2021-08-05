@@ -25,9 +25,21 @@ class SogouTranslationEngine extends TranslationEngine {
   SogouTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeSogou;
+  List<String> get supportedScopes => [kScopeLookUp, kScopeTranslate];
 
   String get _optionPid => option[_kEngineOptionKeyPid];
   String get _optionKey => option[_kEngineOptionKeyKey];
+
+  String _convertLanguageCode(String languageCode) {
+    Map<String, String> map = {
+      Language.ZH.code: 'zh-CHS',
+    };
+
+    if (map.containsKey(languageCode)) {
+      return map[languageCode];
+    }
+    return languageCode;
+  }
 
   @override
   Future<LookUpResponse> lookUp(LookUpRequest request) async {
@@ -35,19 +47,19 @@ class SogouTranslationEngine extends TranslationEngine {
 
     String q = request.word;
 
+    final from = _convertLanguageCode(request.sourceLanguageCode) ?? 'auto';
+    final to = _convertLanguageCode(request.targetLanguageCode);
     final curtime = (DateTime.now().millisecondsSinceEpoch ~/ 1000);
     final salt = Random().nextInt(999999);
     final sign = _md5('$_optionPid$q$salt$_optionKey');
-
-    print(curtime);
 
     Uri uri = Uri.http(
       'fanyi.sogou.com',
       '/reventondc/api/sogouTranslate',
       {
         'q': request.word,
-        'from': 'auto',
-        'to': 'zh-CHS',
+        'from': from,
+        'to': to,
         'pid': _optionPid,
         'salt': salt.toString(),
         'sign': sign.toString(),
@@ -62,9 +74,16 @@ class SogouTranslationEngine extends TranslationEngine {
       'Accept': 'application/json',
     });
     Map<String, dynamic> data = json.decode(utf8.decode(response.bodyBytes));
-    print(response.body);
+    print(data);
 
     lookUpResponse.word = data['query'];
+    if (data['translation'] != null) {
+      lookUpResponse.translations = [
+        Translation(
+          text: data['translation'],
+        ),
+      ];
+    }
 
     if (data['usual'] != null) {
       var usual = data['usual'];
@@ -82,10 +101,10 @@ class SogouTranslationEngine extends TranslationEngine {
     }
 
     if (data['phonetic'] != null) {
-      lookUpResponse.phonetics = (data['phonetic'] as List).map((e) {
-        return WordPhonetic(
+      lookUpResponse.pronunciations = (data['phonetic'] as List).map((e) {
+        return WordPronunciation(
           type: e['type'],
-          alphabet: e['text'],
+          phoneticSymbol: e['text'],
           audioUrl: e['filename'],
         );
       }).toList();

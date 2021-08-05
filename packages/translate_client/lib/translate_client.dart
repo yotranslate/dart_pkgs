@@ -1,7 +1,5 @@
 library translate_client;
 
-export 'src/exceptions/not_found_exception.dart';
-
 export 'src/models/language.dart';
 export 'src/models/look_up_request.dart';
 export 'src/models/look_up_response.dart';
@@ -17,5 +15,6 @@ export 'src/models/word_tag.dart';
 export 'src/models/word_tense.dart';
 
 export './src/translate_client_adapter.dart';
+export './src/translate_client_error.dart';
 export './src/translate_client.dart';
 export './src/translation_engine.dart';

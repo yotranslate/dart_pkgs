@@ -25,7 +25,7 @@ class CloudoptAITranslationEngine extends TranslationEngine {
     var response = await http.get(uri);
     Map<String, dynamic> data = json.decode(response.body);
     if (data['error'] != null) {
-      throw NotFoundException(message: data['errorMessage']);
+      throw TranslateClientError(message: data['errorMessage']);
     }
     print(uri.toString());
     print(response.body);

@@ -23,6 +23,7 @@ class IBMWatsonTranslationEngine extends TranslationEngine {
   IBMWatsonTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeIBMWatson;
+  List<String> get supportedScopes => [kScopeTranslate];
 
   String get _optionApiKey => option[_kEngineOptionKeyApiKey];
   String get _optionApiUrl => option[_kEngineOptionKeyApiUrl];
@@ -36,14 +37,19 @@ class IBMWatsonTranslationEngine extends TranslationEngine {
   Future<TranslateResponse> translate(TranslateRequest request) async {
     TranslateResponse translateResponse = TranslateResponse();
 
+    String modelId =
+        '${request.sourceLanguageCode}-${request.targetLanguageCode}';
+
+    Uri uri = Uri.parse('$_optionApiUrl/v3/translate?version=2018-05-01');
+
     var response = await http.post(
-      '$_optionApiUrl/v3/translate?version=2018-05-01',
+      uri,
       headers: {
         'Authorization': 'Basic ${_base64('apikey:$_optionApiKey')}',
         'Content-Type': 'application/json',
       },
       body: json.encode({
-        'model_id': 'en-zh',
+        'model_id': modelId,
         'text': [request.text],
       }),
     );

@@ -18,6 +18,7 @@ class DeepLTranslationEngine extends TranslationEngine {
   DeepLTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeDeepL;
+  List<String> get supportedScopes => [kScopeTranslate];
 
   String get _optionAuthKey => option[_kEngineOptionKeyAuthKey];
 
@@ -33,8 +34,8 @@ class DeepLTranslationEngine extends TranslationEngine {
     Map<String, String> queryParameters = {
       'auth_key': _optionAuthKey,
       'text': request.text,
-      'source_lang': request.sourceLanguage.code.toUpperCase(),
-      'target_lang': request.targetLanguage.code.toUpperCase(),
+      'source_lang': request.sourceLanguageCode?.toUpperCase(),
+      'target_lang': request.targetLanguageCode?.toUpperCase(),
     };
     var uri = Uri.https('api.deepl.com', '/v2/translate', queryParameters);
     print(uri.toString());
@@ -57,7 +58,7 @@ class DeepLTranslationEngine extends TranslationEngine {
 
     print(data);
     if (data['error'] != null) {
-      throw NotFoundException(message: data['errorMessage']);
+      throw TranslateClientError(message: data['errorMessage']);
     }
 
     return translateResponse;
