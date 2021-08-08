@@ -35,7 +35,7 @@ class YoudaoTranslationEngine extends TranslationEngine {
 
   @override
   Future<LookUpResponse> lookUp(LookUpRequest request) async {
-    LookUpResponse lookUpResponse = LookUpResponse(engine: name);
+    LookUpResponse lookUpResponse = LookUpResponse();
 
     String q = request.word;
     String input = q;

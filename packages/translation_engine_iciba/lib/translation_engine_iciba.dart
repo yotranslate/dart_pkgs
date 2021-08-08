@@ -23,7 +23,12 @@ class IcibaTranslationEngine extends TranslationEngine {
 
   @override
   Future<LookUpResponse> lookUp(LookUpRequest request) async {
-    LookUpResponse lookUpResponse = LookUpResponse(engine: name);
+    LookUpResponse lookUpResponse = LookUpResponse();
+
+    if (!(request.sourceLanguageCode == Language.EN.code &&
+        request.targetLanguageCode == Language.ZH.code)) {
+      throw TranslateClientError(message: 'Not Supported');
+    }
 
     Uri uri = Uri.http(
       'dict-co.iciba.com',

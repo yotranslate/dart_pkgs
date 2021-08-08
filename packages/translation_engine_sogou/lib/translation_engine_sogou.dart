@@ -25,7 +25,7 @@ class SogouTranslationEngine extends TranslationEngine {
   SogouTranslationEngine(TranslationEngineConfig config) : super(config);
 
   String get type => kEngineTypeSogou;
-  List<String> get supportedScopes => [kScopeLookUp, kScopeTranslate];
+  List<String> get supportedScopes => [kScopeLookUp];
 
   String get _optionPid => option[_kEngineOptionKeyPid];
   String get _optionKey => option[_kEngineOptionKeyKey];
@@ -43,7 +43,7 @@ class SogouTranslationEngine extends TranslationEngine {
 
   @override
   Future<LookUpResponse> lookUp(LookUpRequest request) async {
-    LookUpResponse lookUpResponse = LookUpResponse(engine: name);
+    LookUpResponse lookUpResponse = LookUpResponse();
 
     String q = request.word;
 
@@ -102,8 +102,10 @@ class SogouTranslationEngine extends TranslationEngine {
 
     if (data['phonetic'] != null) {
       lookUpResponse.pronunciations = (data['phonetic'] as List).map((e) {
+        String type = e['type'];
+        if (type == 'usa') type = 'us';
         return WordPronunciation(
-          type: e['type'],
+          type: type,
           phoneticSymbol: e['text'],
           audioUrl: e['filename'],
         );

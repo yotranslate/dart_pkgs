@@ -20,7 +20,6 @@ class LookUpResponse extends TranslateResponse {
   List<WordSentence> sentences; // 例句
 
   LookUpResponse({
-    String engine,
     List<Translation> translations,
     this.word,
     this.tip,

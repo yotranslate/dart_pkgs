@@ -12,7 +12,7 @@ class TranslationEngineConfig {
   String type;
   String name;
   Map<String, dynamic> option;
-  List<String> disabledScopes = [];
+  List<String> disabledScopes;
   bool disabled = false;
 
   String get shortId => identifier.substring(0, 4);
